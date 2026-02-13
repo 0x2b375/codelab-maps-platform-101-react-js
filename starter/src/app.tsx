@@ -13,13 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
 import React from 'react';
-import { createRoot } from "react-dom/client";
+import {createRoot} from "react-dom/client";
+import {APIProvider, Map, MapCameraChangedEvent} from '@vis.gl/react-google-maps';
 
-const App = () => (<h1>Hello, world!</h1>);
+const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 
-const root = createRoot(document.getElementById('app'));
+
+const App = () => (
+ <APIProvider apiKey={apiKey} onLoad={() => console.log('Maps API has loaded.')}>
+   <Map
+      defaultZoom={13}
+      defaultCenter={ { lat: -33.860664, lng: 151.208138 } }
+      onCameraChanged={ (e: MapCameraChangedEvent) =>
+        console.log('camera changed:', e.detail.center, 'zoom:', e.detail.zoom)
+      }>
+   </Map>
+ </APIProvider>
+);
+
+const rootElement = document.getElementById('app');
+if (!rootElement) {
+  throw new Error('Failed to find the root element');
+}
+const root = createRoot(rootElement);
 root.render(<App />);
 
 export default App;
