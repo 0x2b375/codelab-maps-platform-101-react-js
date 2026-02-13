@@ -17,6 +17,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {createRoot} from "react-dom/client";
 import {AdvancedMarker, APIProvider, Map, MapCameraChangedEvent, Pin, useMap} from '@vis.gl/react-google-maps';
 import { Marker, MarkerClusterer } from '@googlemaps/markerclusterer';
+import {Circle} from './components/circle'
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string;
@@ -57,6 +58,7 @@ const App = () => (
 
 const PoiMarkers = (props: {pois: Poi[]}) => {
   const map = useMap();
+  const [circleCenter, setCircleCenter] = useState<google.maps.LatLng | null>(null)
   const [markers, setMarkers] = useState<{[key: string]: Marker}>({});
   const clusterer = useRef<MarkerClusterer | null>(null);
   // Initialize MarkerClusterer, if the map has changed
@@ -92,19 +94,29 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
     if(!map) return;
     if(!ev.latLng) return;
     console.log('marker clicked:', ev.latLng.toString());
+    setCircleCenter(ev.latLng);
     map.panTo(ev.latLng);
   }, [map]);
 
   return (
     <>
+       <Circle
+          radius={800}
+          center={circleCenter}
+          strokeColor={'#0c4cb3'}
+          strokeOpacity={1}
+          strokeWeight={3}
+          fillColor={'#3b82f6'}
+          fillOpacity={0.3}
+        />
       {props.pois.map( (poi: Poi) => (
-        <AdvancedMarker 
+        <AdvancedMarker
           key={poi.key}
           position={poi.location}
           ref={marker => setMarkerRef(marker, poi.key)}
           onClick={handleClick}
           >
-        <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
+            <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
         </AdvancedMarker>
       ))}
     </>
