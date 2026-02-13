@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-import { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {createRoot} from "react-dom/client";
 import {AdvancedMarker, APIProvider, Map, MapCameraChangedEvent, Pin, useMap} from '@vis.gl/react-google-maps';
 import { Marker, MarkerClusterer } from '@googlemaps/markerclusterer';
@@ -88,13 +88,22 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
     });
   };
 
+  const handleClick = useCallback((ev: google.maps.MapMouseEvent) => {
+    if(!map) return;
+    if(!ev.latLng) return;
+    console.log('marker clicked:', ev.latLng.toString());
+    map.panTo(ev.latLng);
+  }, [map]);
+
   return (
     <>
       {props.pois.map( (poi: Poi) => (
         <AdvancedMarker 
           key={poi.key}
           position={poi.location}
-          ref={marker => setMarkerRef(marker, poi.key)}>
+          ref={marker => setMarkerRef(marker, poi.key)}
+          onClick={handleClick}
+          >
         <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
         </AdvancedMarker>
       ))}
