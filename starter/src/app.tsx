@@ -42,15 +42,19 @@ const locations: Poi[] = [
 ];
 
 const App = () => (
- <APIProvider apiKey={apiKey} onLoad={() => console.log('Maps API has loaded.')}>
+ <APIProvider  language='MN' apiKey={apiKey} onLoad={() => console.log('Maps API has loaded.')}>
    <Map
       defaultZoom={13}
       defaultCenter={ { lat: -33.860664, lng: 151.208138 } }
       //need mapId to use advanced marker
       mapId={mapId}
+      //removed default(weird) handlers
+      disableDefaultUI={true}
+      gestureHandling={'greedy'}
       onCameraChanged={ (e: MapCameraChangedEvent) =>
         console.log('camera changed:', e.detail.center, 'zoom:', e.detail.zoom)
-      }>
+      }
+    >
       <PoiMarkers pois={locations} />
    </Map>
  </APIProvider>
