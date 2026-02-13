@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-import React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {createRoot} from "react-dom/client";
-import {AdvancedMarker, APIProvider, Map, MapCameraChangedEvent, Pin} from '@vis.gl/react-google-maps';
+import {AdvancedMarker, APIProvider, Map, MapCameraChangedEvent, Pin, useMap} from '@vis.gl/react-google-maps';
+import { Marker, MarkerClusterer } from '@googlemaps/markerclusterer';
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string;
@@ -44,6 +45,7 @@ const App = () => (
    <Map
       defaultZoom={13}
       defaultCenter={ { lat: -33.860664, lng: 151.208138 } }
+      //need mapId to use advanced marker
       mapId={mapId}
       onCameraChanged={ (e: MapCameraChangedEvent) =>
         console.log('camera changed:', e.detail.center, 'zoom:', e.detail.zoom)
@@ -54,12 +56,45 @@ const App = () => (
 );
 
 const PoiMarkers = (props: {pois: Poi[]}) => {
+  const map = useMap();
+  const [markers, setMarkers] = useState<{[key: string]: Marker}>({});
+  const clusterer = useRef<MarkerClusterer | null>(null);
+  // Initialize MarkerClusterer, if the map has changed
+   useEffect(() => {
+    if (!map) return;
+    if (!clusterer.current) {
+      clusterer.current = new MarkerClusterer({map});
+    }
+  }, [map]);
+
+  // Update markers, if the array has changed
+  useEffect(() => {
+    clusterer.current?.clearMarkers();
+    clusterer.current?.addMarkers(Object.values(markers));
+  }, [markers]);
+
+  const setMarkerRef = (marker: Marker | null, key: string) => {
+    if (marker && markers[key]) return;
+    if (!marker && !markers[key]) return;
+
+    setMarkers(prev => {
+      if (marker) {
+        return {...prev, [key]: marker};
+      } else {
+        const newMarkers = {...prev};
+        delete newMarkers[key];
+        return newMarkers;
+      }
+    });
+  };
+
   return (
     <>
       {props.pois.map( (poi: Poi) => (
-        <AdvancedMarker
+        <AdvancedMarker 
           key={poi.key}
-          position={poi.location}>
+          position={poi.location}
+          ref={marker => setMarkerRef(marker, poi.key)}>
         <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
         </AdvancedMarker>
       ))}
