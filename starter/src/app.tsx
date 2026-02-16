@@ -66,9 +66,9 @@ const locations: Poi[] = [
 const App = () => (
  <APIProvider  language='MN' apiKey={apiKey} onLoad={() => console.log('Maps API has loaded.')}>
    <Map
-   style={{height: '100vh', width: '100%'}}
       defaultZoom={13}
-      maxZoom={15}
+      minZoom={3}
+      maxZoom={20}
       defaultCenter={ { lat: 47.919913, lng: 106.917566 } }
       //need mapId to use advanced marker
       mapId={mapId}
@@ -155,11 +155,11 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
           onClick={() => handleClick(poi)}
         >
           <img
-            src="/pin.png"
+            src="/water_pin.png"
             alt="marker"
             style={{
-              width: "64px",
-              height: "64px",
+              width: "32px",
+              height: "32px",
               objectFit: "contain"
             }}
           />
@@ -171,7 +171,7 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
         position={selectedPoi.location}
         onCloseClick={() => setSelectedPoi(null)}
       >
-        <div style={{ minWidth: 150 }}>
+        <div>
           <strong>{selectedPoi.key.replace(/_/g, " ")}</strong>
           <div>
             Lat: {selectedPoi.location.lat}
