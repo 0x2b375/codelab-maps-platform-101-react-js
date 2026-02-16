@@ -15,7 +15,7 @@
 */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {createRoot} from "react-dom/client";
-import {AdvancedMarker, APIProvider, Map, MapCameraChangedEvent, Pin, useMap} from '@vis.gl/react-google-maps';
+import {AdvancedMarker, APIProvider, Map, MapCameraChangedEvent, useMap, InfoWindow} from '@vis.gl/react-google-maps';
 import { Marker, MarkerClusterer } from '@googlemaps/markerclusterer';
 import {Circle} from './components/circle'
 
@@ -24,31 +24,52 @@ const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string;
 
 type Poi ={ key: string, location: google.maps.LatLngLiteral }
 const locations: Poi[] = [
-  {key: 'operaHouse', location: { lat: -33.8567844, lng: 151.213108  }},
-  {key: 'tarongaZoo', location: { lat: -33.8472767, lng: 151.2188164 }},
-  {key: 'manlyBeach', location: { lat: -33.8209738, lng: 151.2563253 }},
-  {key: 'hyderPark', location: { lat: -33.8690081, lng: 151.2052393 }},
-  {key: 'theRocks', location: { lat: -33.8587568, lng: 151.2058246 }},
-  {key: 'circularQuay', location: { lat: -33.858761, lng: 151.2055688 }},
-  {key: 'harbourBridge', location: { lat: -33.852228, lng: 151.2038374 }},
-  {key: 'kingsCross', location: { lat: -33.8737375, lng: 151.222569 }},
-  {key: 'botanicGardens', location: { lat: -33.864167, lng: 151.216387 }},
-  {key: 'museumOfSydney', location: { lat: -33.8636005, lng: 151.2092542 }},
-  {key: 'maritimeMuseum', location: { lat: -33.869395, lng: 151.198648 }},
-  {key: 'kingStreetWharf', location: { lat: -33.8665445, lng: 151.1989808 }},
-  {key: 'aquarium', location: { lat: -33.869627, lng: 151.202146 }},
-  {key: 'darlingHarbour', location: { lat: -33.87488, lng: 151.1987113 }},
-  {key: 'barangaroo', location: { lat: - 33.8605523, lng: 151.1972205 }},
+  {
+    key: 'sukhbaatar_square',
+    location: { lat: 47.9184676, lng: 106.9177016 } // Sükhbaatar Square
+  },
+  {
+    key: 'zaisan_memorial',
+    location: { lat: 47.8859914, lng: 106.9132822 } // Zaisan Hill Memorial
+  },
+  {
+    key: 'narantuul_market',
+    location: { lat: 47.9223350, lng: 106.9592460 } // Narantuul (Black Market)
+  },
+  {
+    key: 'gandan_monastery',
+    location: { lat: 47.9230580, lng: 106.8943150 } // Gandantegchinlen Monastery
+  },
+  {
+    key: 'bogd_khaan_palace',
+    location: { lat: 47.8991020, lng: 106.9093150 } // Winter Palace of Bogd Khan
+  },
+  {
+    key: 'national_park',
+    location: { lat: 47.9145130, lng: 106.9417550 } // National Amusement Park
+  },
+  {
+    key: 'bayanzurkh_district',
+    location: { lat: 47.9222220, lng: 106.9708330 } // Bayanzürkh District center
+  },
+  {
+    key: 'bayangol_district',
+    location: { lat: 47.9185560, lng: 106.8678890 } // Bayangol District center
+  },
+  {
+    key: 'bagakhangai_district',
+    location: { lat: 47.3576110, lng: 107.4667220 } // Bagakhangai District center
+  }
 ];
+
 
 const App = () => (
  <APIProvider  language='MN' apiKey={apiKey} onLoad={() => console.log('Maps API has loaded.')}>
    <Map
    style={{height: '100vh', width: '100%'}}
       defaultZoom={13}
-      minZoom={6}
       maxZoom={15}
-      defaultCenter={ { lat: 47.172089, lng: 104.097573 } }
+      defaultCenter={ { lat: 47.919913, lng: 106.917566 } }
       //need mapId to use advanced marker
       mapId={mapId}
       //removed default(weird) handlers
@@ -73,6 +94,7 @@ const App = () => (
 
 const PoiMarkers = (props: {pois: Poi[]}) => {
   const map = useMap();
+  const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [circleCenter, setCircleCenter] = useState<google.maps.LatLng | null>(null)
   const [markers, setMarkers] = useState<{[key: string]: Marker}>({});
   const clusterer = useRef<MarkerClusterer | null>(null);
@@ -105,13 +127,14 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
     });
   };
 
-  const handleClick = useCallback((ev: google.maps.MapMouseEvent) => {
-    if(!map) return;
-    if(!ev.latLng) return;
-    console.log('marker clicked:', ev.latLng.toString());
-    setCircleCenter(ev.latLng);
-    map.panTo(ev.latLng);
-  }, [map]);
+  const handleClick = useCallback(
+    (poi: Poi) => {
+      setSelectedPoi(poi);
+      setCircleCenter(new google.maps.LatLng(poi.location));
+      map?.panTo(poi.location);
+    },
+    [map]
+  );
 
   return (
     <>
@@ -124,17 +147,41 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
           fillColor={'#3b82f6'}
           fillOpacity={0.3}
         />
-      {props.pois.map( (poi: Poi) => (
+      {props.pois.map((poi: Poi) => (
         <AdvancedMarker
           key={poi.key}
           position={poi.location}
           ref={marker => setMarkerRef(marker, poi.key)}
-          onClick={handleClick}
-          >
-            <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
+          onClick={() => handleClick(poi)}
+        >
+          <img
+            src="/pin.png"
+            alt="marker"
+            style={{
+              width: "64px",
+              height: "64px",
+              objectFit: "contain"
+            }}
+          />
         </AdvancedMarker>
+        
       ))}
-    </>
+      {selectedPoi && (
+      <InfoWindow
+        position={selectedPoi.location}
+        onCloseClick={() => setSelectedPoi(null)}
+      >
+        <div style={{ minWidth: 150 }}>
+          <strong>{selectedPoi.key.replace(/_/g, " ")}</strong>
+          <div>
+            Lat: {selectedPoi.location.lat}
+            <br />
+            Lng: {selectedPoi.location.lng}
+          </div>
+        </div>
+      </InfoWindow>
+    )}
+  </>
   );
 };
 
