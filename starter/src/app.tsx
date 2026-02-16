@@ -44,8 +44,11 @@ const locations: Poi[] = [
 const App = () => (
  <APIProvider  language='MN' apiKey={apiKey} onLoad={() => console.log('Maps API has loaded.')}>
    <Map
+   style={{height: '100vh', width: '100%'}}
       defaultZoom={13}
-      defaultCenter={ { lat: -33.860664, lng: 151.208138 } }
+      minZoom={6}
+      maxZoom={15}
+      defaultCenter={ { lat: 47.172089, lng: 104.097573 } }
       //need mapId to use advanced marker
       mapId={mapId}
       //removed default(weird) handlers
@@ -54,6 +57,14 @@ const App = () => (
       onCameraChanged={ (e: MapCameraChangedEvent) =>
         console.log('camera changed:', e.detail.center, 'zoom:', e.detail.zoom)
       }
+      restriction={{
+        latLngBounds: {
+          north: 52.15473,  
+          south: 41.59744,
+          east: 119.93139,
+          west: 87.74825
+        }
+      }}
     >
       <PoiMarkers pois={locations} />
    </Map>
