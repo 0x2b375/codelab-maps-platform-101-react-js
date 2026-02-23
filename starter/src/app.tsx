@@ -117,7 +117,6 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
             return new google.maps.marker.AdvancedMarkerElement({
               position,
               content: pin.element,
-              zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
             });
           }
         }
