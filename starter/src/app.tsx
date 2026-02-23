@@ -61,6 +61,7 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [circleCenter, setCircleCenter] = useState<google.maps.LatLng | null>(null)
   const [markers, setMarkers] = useState<{[key: string]: google.maps.marker.AdvancedMarkerElement}>({});
+  const [isDragging, setIsDragging] = useState(false);
   const clusterer = useRef<MarkerClusterer | null>(null);
   // Initialize MarkerClusterer, if the map has changed
    useEffect(() => {
@@ -93,6 +94,26 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
     clusterer.current?.clearMarkers();
     clusterer.current?.addMarkers(Object.values(markers));
   }, [markers]);
+
+  // Hide markers during drag for performance
+  useEffect(() => {
+    if (!map || !clusterer.current) return;
+
+    const dragStartListener = map.addListener('dragstart', () => {
+      setIsDragging(true);
+      clusterer.current?.setMap(null);
+    });
+
+    const dragEndListener = map.addListener('dragend', () => {
+      setIsDragging(false);
+      clusterer.current?.setMap(map);
+    });
+
+    return () => {
+      google.maps.event.removeListener(dragStartListener);
+      google.maps.event.removeListener(dragEndListener);
+    };
+  }, [map]);
 
   const setMarkerRef = (marker: google.maps.marker.AdvancedMarkerElement | null, key: string) => {
     if (marker && markers[key]) return;
@@ -129,7 +150,7 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
           fillColor={'#3b82f6'}
           fillOpacity={0.3}
         />
-      {props.pois.map((poi: Poi) => (
+      {!isDragging && props.pois.map((poi: Poi) => (
         <AdvancedMarker
           key={poi.key}
           position={poi.location}
