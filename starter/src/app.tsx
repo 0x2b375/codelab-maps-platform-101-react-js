@@ -16,51 +16,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {createRoot} from "react-dom/client";
 import {AdvancedMarker, APIProvider, Map, MapCameraChangedEvent, useMap, InfoWindow} from '@vis.gl/react-google-maps';
-import { Marker, MarkerClusterer } from '@googlemaps/markerclusterer';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import {Circle} from './components/circle'
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string;
 
+import locations from './locations.json';
+
 type Poi ={ key: string, location: google.maps.LatLngLiteral }
-const locations: Poi[] = [
-  {
-    key: 'sukhbaatar_square',
-    location: { lat: 47.9184676, lng: 106.9177016 } // Sükhbaatar Square
-  },
-  {
-    key: 'zaisan_memorial',
-    location: { lat: 47.8859914, lng: 106.9132822 } // Zaisan Hill Memorial
-  },
-  {
-    key: 'narantuul_market',
-    location: { lat: 47.9223350, lng: 106.9592460 } // Narantuul (Black Market)
-  },
-  {
-    key: 'gandan_monastery',
-    location: { lat: 47.9230580, lng: 106.8943150 } // Gandantegchinlen Monastery
-  },
-  {
-    key: 'bogd_khaan_palace',
-    location: { lat: 47.8991020, lng: 106.9093150 } // Winter Palace of Bogd Khan
-  },
-  {
-    key: 'national_park',
-    location: { lat: 47.9145130, lng: 106.9417550 } // National Amusement Park
-  },
-  {
-    key: 'bayanzurkh_district',
-    location: { lat: 47.9222220, lng: 106.9708330 } // Bayanzürkh District center
-  },
-  {
-    key: 'bayangol_district',
-    location: { lat: 47.9185560, lng: 106.8678890 } // Bayangol District center
-  },
-  {
-    key: 'bagakhangai_district',
-    location: { lat: 47.3576110, lng: 107.4667220 } // Bagakhangai District center
-  }
-];
 
 
 const App = () => (
