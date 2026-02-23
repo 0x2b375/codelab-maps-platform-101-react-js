@@ -96,13 +96,32 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
   const map = useMap();
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [circleCenter, setCircleCenter] = useState<google.maps.LatLng | null>(null)
-  const [markers, setMarkers] = useState<{[key: string]: Marker}>({});
+  const [markers, setMarkers] = useState<{[key: string]: google.maps.marker.AdvancedMarkerElement}>({});
   const clusterer = useRef<MarkerClusterer | null>(null);
   // Initialize MarkerClusterer, if the map has changed
    useEffect(() => {
     if (!map) return;
     if (!clusterer.current) {
-      clusterer.current = new MarkerClusterer({map});
+      clusterer.current = new MarkerClusterer({
+        map,
+        renderer: {
+          render: ({ count, position }) => {
+            const pin = new google.maps.marker.PinElement({
+              glyph: String(count),
+              background: "#0c4cb3",
+              borderColor: "white",
+              glyphColor: "white",
+              scale: 1.2
+            });
+
+            return new google.maps.marker.AdvancedMarkerElement({
+              position,
+              content: pin.element,
+              zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
+            });
+          }
+        }
+      });
     }
   }, [map]);
 
@@ -112,7 +131,7 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
     clusterer.current?.addMarkers(Object.values(markers));
   }, [markers]);
 
-  const setMarkerRef = (marker: Marker | null, key: string) => {
+  const setMarkerRef = (marker: google.maps.marker.AdvancedMarkerElement | null, key: string) => {
     if (marker && markers[key]) return;
     if (!marker && !markers[key]) return;
 
