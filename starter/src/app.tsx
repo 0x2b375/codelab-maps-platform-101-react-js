@@ -56,10 +56,9 @@ const App = () => (
  </APIProvider>
 );
 
-const PoiMarkers = (props: {pois: Poi[]}) => {
+const PoiMarkers = (props: {pois:Poi[]}) => {
   const map = useMap();
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
-  const [circleCenter, setCircleCenter] = useState<google.maps.LatLng | null>(null)
   const [markers, setMarkers] = useState<{[key: string]: google.maps.marker.AdvancedMarkerElement}>({});
   const [isDragging, setIsDragging] = useState(false);
   const clusterer = useRef<MarkerClusterer | null>(null);
@@ -133,7 +132,6 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
   const handleClick = useCallback(
     (poi: Poi) => {
       setSelectedPoi(poi);
-      setCircleCenter(new google.maps.LatLng(poi.location));
       map?.panTo(poi.location);
     },
     [map]
@@ -141,15 +139,6 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
 
   return (
     <>
-       <Circle
-          radius={800}
-          center={circleCenter}
-          strokeColor={'#0c4cb3'}
-          strokeOpacity={1}
-          strokeWeight={3}
-          fillColor={'#3b82f6'}
-          fillOpacity={0.3}
-        />
       {!isDragging && props.pois.map((poi: Poi) => (
         <AdvancedMarker
           key={poi.key}
@@ -173,14 +162,13 @@ const PoiMarkers = (props: {pois: Poi[]}) => {
       <InfoWindow
         position={selectedPoi.location}
         onCloseClick={() => setSelectedPoi(null)}
+        headerContent={selectedPoi.key.replace(/_/g, " ")}
+        pixelOffset={new google.maps.Size(0, -25)}
       >
         <div>
-          <strong>{selectedPoi.key.replace(/_/g, " ")}</strong>
-          <div>
-            Lat: {selectedPoi.location.lat}
-            <br />
-            Lng: {selectedPoi.location.lng}
-          </div>
+          Lat: {selectedPoi.location.lat}
+          <br />
+          Lng: {selectedPoi.location.lng}
         </div>
       </InfoWindow>
     )}
