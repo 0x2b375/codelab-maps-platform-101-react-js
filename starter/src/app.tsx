@@ -17,7 +17,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {createRoot} from "react-dom/client";
 import {AdvancedMarker, APIProvider, Map, MapCameraChangedEvent, useMap, InfoWindow} from '@vis.gl/react-google-maps';
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
-import {Circle} from './components/circle'
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string;
@@ -60,6 +59,8 @@ const PoiMarkers = (props: {pois:Poi[]}) => {
   const map = useMap();
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [markers, setMarkers] = useState<{[key: string]: google.maps.marker.AdvancedMarkerElement}>({});
+  const [customMarker, setCustomMarker] =
+  useState<google.maps.LatLngLiteral | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const clusterer = useRef<MarkerClusterer | null>(null);
   // Initialize MarkerClusterer, if the map has changed
@@ -114,6 +115,29 @@ const PoiMarkers = (props: {pois:Poi[]}) => {
     };
   }, [map]);
 
+  //Listen to map clicks
+  useEffect(() => {
+  if (!map) return;
+
+  const listener = map.addListener("click", (e: google.maps.MapMouseEvent) => {
+    if (!e.latLng) return;
+
+    const position = {
+      lat: e.latLng.lat(),
+      lng: e.latLng.lng()
+    }; 
+
+    console.log(position);
+
+    setCustomMarker(position);
+    setSelectedPoi(null);
+  });
+
+  return () => {
+    google.maps.event.removeListener(listener);
+  };
+}, [map]);
+
   const setMarkerRef = (marker: google.maps.marker.AdvancedMarkerElement | null, key: string) => {
     if (marker && markers[key]) return;
     if (!marker && !markers[key]) return;
@@ -158,6 +182,18 @@ const PoiMarkers = (props: {pois:Poi[]}) => {
         </AdvancedMarker>
         
       ))}
+      {customMarker && (
+      <AdvancedMarker position={customMarker}>
+        <img
+          src="/water_pin.png"
+          style={{
+            width: "32px",
+            height: "32px",
+            objectFit: "contain"
+          }}
+        />
+      </AdvancedMarker>
+    )}
       {selectedPoi && (
       <InfoWindow
         position={selectedPoi.location}
